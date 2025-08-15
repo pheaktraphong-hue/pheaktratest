@@ -1,1 +1,1130 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CoinNewList Ultra - Real-Time Prices</title>
+  <style>
+    :root {
+      --primary: #2ecc71;
+      --primary-dark: #27ae60;
+      --negative: #e74c3c;
+      --negative-dark: #c0392b;
+      --text: #333;
+      --text-light: #666;
+      --bg: #f4f4f4;
+      --card-bg: #fff;
+      --border: #eee;
+      --shadow: 0 2px 4px rgba(0,0,0,0.05);
+      --shadow-hover: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+      opacity: 0;
+      animation: fadeIn 0.8s ease-out forwards;
+      overflow-x: hidden;
+    }
+
+    @keyframes fadeIn {
+      to { opacity: 1; }
+    }
+
+    .fade-in {
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fadeInUp 0.6s ease-out forwards;
+    }
+
+    @keyframes fadeInUp {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    header {
+      padding: 1.5rem 0;
+      text-align: center;
+      position: relative;
+      z-index: 10;
+    }
+
+    .header-content {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+    }
+
+    header img {
+      width: 2.5rem;
+      height: 2.5rem;
+      border-radius: 50%;
+      object-fit: cover;
+      transition: transform 0.3s ease;
+    }
+
+    header img:hover {
+      transform: rotate(15deg);
+    }
+
+    header h1 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      background: linear-gradient(90deg, var(--primary), #3498db);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    nav {
+      margin: 1.5rem auto;
+      max-width: 800px;
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    nav a {
+      padding: 0.5rem 1rem;
+      text-decoration: none;
+      font-weight: 600;
+      color: var(--text);
+      border-radius: 50px;
+      transition: all 0.3s ease;
+      position: relative;
+    }
+
+    nav a:hover {
+      color: var(--primary);
+      transform: translateY(-2px);
+    }
+
+    nav a::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      width: 0;
+      height: 2px;
+      background: var(--primary);
+      transition: all 0.3s ease;
+      transform: translateX(-50%);
+    }
+
+    nav a:hover::after {
+      width: 60%;
+    }
+
+    section {
+      padding: 1.5rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    h2, h3 {
+      margin-bottom: 1.5rem;
+      text-align: center;
+      font-weight: 600;
+    }
+
+    h2 {
+      font-size: 1.75rem;
+    }
+
+    h3 {
+      font-size: 1.5rem;
+    }
+
+    /* Cards Section */
+    .cards-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 1.25rem;
+      margin: 1.5rem 0;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 1.25rem;
+      text-align: center;
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+      will-change: transform;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: var(--shadow-hover);
+    }
+
+    .card img {
+      width: 2.5rem;
+      height: 2.5rem;
+      margin: 0 auto 0.75rem;
+      object-fit: contain;
+      transition: transform 0.3s ease;
+    }
+
+    .card:hover img {
+      transform: scale(1.1);
+    }
+
+    .coin-name {
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .price {
+      font-size: 1rem;
+      margin-bottom: 0.25rem;
+      font-weight: 500;
+    }
+
+    .change {
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+
+    .positive {
+      color: var(--primary);
+    }
+
+    .negative {
+      color: var(--negative);
+    }
+
+    /* Trending Items */
+    .dynamic-trending {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.75rem;
+      margin: 1.5rem 0;
+    }
+
+    .trending-item {
+      background: var(--card-bg);
+      padding: 0.5rem 1rem;
+      border-radius: 50px;
+      display: flex;
+      align-items: center;
+      font-size: 0.9rem;
+      box-shadow: var(--shadow);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      border: 1px solid var(--border);
+      will-change: transform;
+    }
+
+    .trending-item:hover {
+      transform: scale(1.03);
+      box-shadow: var(--shadow-hover);
+      background: rgba(46, 204, 113, 0.05);
+    }
+
+    .trending-item img {
+      width: 1.25rem;
+      height: 1.25rem;
+      margin-right: 0.5rem;
+      border-radius: 50%;
+    }
+
+    /* Table Styles */
+    .table-container {
+      width: 100%;
+      overflow-x: auto;
+      margin: 1.5rem 0;
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 600px;
+    }
+
+    th, td {
+      padding: 1rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+
+    th {
+      background: rgba(248, 249, 250, 0.8);
+      font-weight: 600;
+      position: sticky;
+      top: 0;
+      backdrop-filter: blur(5px);
+    }
+
+    tr {
+      transition: background 0.2s ease;
+    }
+
+    tr:not(:last-child) {
+      border-bottom: 1px solid var(--border);
+    }
+
+    tr:hover {
+      background: rgba(46, 204, 113, 0.05);
+    }
+
+    .crypto-logo {
+      width: 1.5rem;
+      height: 1.5rem;
+      vertical-align: middle;
+      margin-right: 0.5rem;
+      border-radius: 50%;
+    }
+
+    .sparkline-cell svg {
+      display: block;
+      margin: 0 auto;
+    }
+
+    .loading {
+      padding: 2rem;
+      text-align: center;
+      font-style: italic;
+      color: var(--text-light);
+    }
+
+    .price-up {
+      color: var(--primary);
+      animation: priceUp 0.5s ease-out;
+    }
+
+    .price-down {
+      color: var(--negative);
+      animation: priceDown 0.5s ease-out;
+    }
+
+    @keyframes priceUp {
+      0% { color: var(--primary); }
+      50% { color: #2ecc71; opacity: 0.8; transform: scale(1.1); }
+      100% { color: var(--primary); }
+    }
+
+    @keyframes priceDown {
+      0% { color: var(--negative); }
+      50% { color: #e74c3c; opacity: 0.8; transform: scale(1.1); }
+      100% { color: var(--negative); }
+    }
+
+    /* Connection Status */
+    .connection-status {
+      position: fixed;
+      bottom: 1rem;
+      right: 1rem;
+      padding: 0.5rem 1rem;
+      border-radius: 50px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      box-shadow: var(--shadow);
+    }
+
+    .connection-status.connected {
+      background: rgba(46, 204, 113, 0.1);
+      color: var(--primary);
+    }
+
+    .connection-status.disconnected {
+      background: rgba(231, 76, 60, 0.1);
+      color: var(--negative);
+    }
+
+    .status-indicator {
+      width: 0.75rem;
+      height: 0.75rem;
+      border-radius: 50%;
+    }
+
+    .status-indicator.connected {
+      background: var(--primary);
+      animation: pulse 2s infinite;
+    }
+
+    .status-indicator.disconnected {
+      background: var(--negative);
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.1); opacity: 0.7; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    /* Responsive Adjustments */
+    @media (max-width: 768px) {
+      header h1 {
+        font-size: 1.5rem;
+      }
+      
+      nav {
+        gap: 0.5rem;
+      }
+      
+      nav a {
+        padding: 0.5rem;
+        font-size: 0.9rem;
+      }
+      
+      .cards-container {
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: 1rem;
+      }
+      
+      .card {
+        padding: 1rem;
+      }
+      
+      th, td {
+        padding: 0.75rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      header h1 {
+        font-size: 1.25rem;
+      }
+      
+      header img {
+        width: 2rem;
+        height: 2rem;
+      }
+      
+      .cards-container {
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      }
+      
+      .coin-name, .price {
+        font-size: 0.9rem;
+      }
+      
+      .change {
+        font-size: 0.8rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header class="fade-in">
+    <div class="header-content">
+      <img src="https://avatars.githubusercontent.com/u/198788596?s=400&u=ac4377a892d8ced8eb20d8091325af5e7c8f24ad&v=4" alt="CoinNewList Logo">
+      <h1>CoinNewList</h1>
+    </div>
+  </header>
+
+  <!-- Navigation -->
+  <nav class="fade-in" style="animation-delay: 0.1s">
+    <a href="#">All Crypto</a>
+    <a href="https://coinnewlist.github.io/newlist/">NewList</a>
+    <a href="https://coinnewlist.github.io/Trending/">Trending</a>
+    <a href="#">News</a>
+  </nav>
+  
+  <!-- Static Trending Cards Section -->
+  <section class="fade-in" style="animation-delay: 0.2s">
+    <h2>New Cryptos</h2>
+    <div class="cards-container" id="cardsContainer">
+      <!-- Will be populated by JavaScript -->
+      <div class="loading">Loading crypto cards...</div>
+    </div>
+  </section>
+  
+  <!-- Dynamic Section -->
+  <section class="fade-in" style="animation-delay: 0.3s">
+    <h3>Most Visited Cryptocurrencies</h3>
+    <div class="dynamic-trending" id="trendingContainer">
+      <!-- Will be populated by JavaScript -->
+      <div class="loading">Loading trending data...</div>
+    </div>
+    
+    <div class="table-container">
+      <table>
+        <thead id="tableHeader">
+          <!-- Will be populated by JavaScript -->
+        </thead>
+        <tbody id="cryptoTableBody">
+          <tr>
+            <td colspan="7" class="loading">Loading crypto data...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Connection Status Indicator -->
+  <div id="connectionStatus" class="connection-status disconnected">
+    <span class="status-indicator disconnected"></span>
+    <span>Connecting...</span>
+  </div>
+  
+  <script>
+    // Global state
+    const state = {
+      coinCache: {},
+      previousPrices: {},
+      isFirstLoad: true,
+      socket: null,
+      connectionRetries: 0,
+      maxRetries: 5,
+      trackedCoins: new Set(),
+      cardsData: [
+        {
+          id: 'coinewlist',
+          name: 'Coinewlist',
+          symbol: 'CNL',
+          image: 'https://pbs.twimg.com/media/GmVkPRKaYAA6rhL?format=jpg&name=4096x4096',
+          price: '0.000001',
+          change24h: '+1500%'
+        },
+        {
+          id: '1000000usd',
+          name: '1000000$',
+          symbol: 'USD',
+          image: 'https://pbs.twimg.com/media/GmVRPRvasAA6aTJ?format=png&name=240x240',
+          price: '0.000001',
+          change24h: '-500%'
+        },
+        {
+          id: 'global-network',
+          name: 'Global Network',
+          symbol: 'GN',
+          image: 'https://pbs.twimg.com/media/GmY3dBBaQAAw7a4?format=png&name=360x360',
+          price: '0.0000001',
+          change24h: '-200%'
+        },
+        {
+          id: 'global-nft',
+          name: 'Global NFT',
+          symbol: 'GNT',
+          image: 'https://pbs.twimg.com/media/GmY9Vo5a8AMSv97?format=jpg&name=900x900',
+          price: '0.0000009',
+          change24h: '-150%'
+        },
+        {
+          id: 'cardano',
+          name: 'Cardano',
+          symbol: 'ADA',
+          image: 'https://cryptologos.cc/logos/cardano-ada-logo.svg?v=024',
+          price: '1.23',
+          change24h: '+2.50%'
+        },
+        {
+          id: 'solana',
+          name: 'Solana',
+          symbol: 'SOL',
+          image: 'https://cryptologos.cc/logos/solana-sol-logo.svg?v=024',
+          price: '30.45',
+          change24h: '+4.10%'
+        },
+        {
+          id: 'polkadot',
+          name: 'Polkadot',
+          symbol: 'DOT',
+          image: 'https://cryptologos.cc/logos/polkadot-new-dot-logo.svg?v=024',
+          price: '15.67',
+          change24h: '-0.85%'
+        },
+        {
+          id: 'litecoin',
+          name: 'Litecoin',
+          symbol: 'LTC',
+          image: 'https://cryptologos.cc/logos/litecoin-ltc-logo.svg?v=024',
+          price: '180.90',
+          change24h: '+1.10%'
+        },
+        {
+          id: 'dogecoin',
+          name: 'Dogecoin',
+          symbol: 'DOGE',
+          image: 'https://cryptologos.cc/logos/dogecoin-doge-logo.svg?v=024',
+          price: '0.065',
+          change24h: '-2.30%'
+        },
+        {
+          id: 'binancecoin',
+          name: 'BNB',
+          symbol: 'BNB',
+          image: 'https://cryptologos.cc/logos/binance-coin-bnb-logo.svg?v=024',
+          price: '320.45',
+          change24h: '+2.10%'
+        }
+      ]
+    };
+
+    // DOM Elements
+    const elements = {
+      cardsContainer: document.getElementById('cardsContainer'),
+      trendingContainer: document.getElementById('trendingContainer'),
+      tableHeader: document.getElementById('tableHeader'),
+      tableBody: document.getElementById('cryptoTableBody'),
+      connectionStatus: document.getElementById('connectionStatus')
+    };
+
+    // Configuration
+    const config = {
+      apiBaseUrl: 'https://api.coingecko.com/api/v3',
+      wsEndpoint: 'wss://ws.coingecko.com/api/v3',
+      updateIntervalMs: 30000, // 30 seconds for fallback
+      customCoins: {
+        'coinewlist': {
+          image: 'https://pbs.twimg.com/media/GmVkPRKaYAA6rhL?format=jpg&name=4096x4096',
+          price: '0.000001',
+          change24h: '+1500%',
+          change1h: 'N/A'
+        },
+        '1000000$': {
+          image: 'https://pbs.twimg.com/media/GmVRPRvasAA6aTJ?format=png&name=240x240',
+          price: '0.000001',
+          change24h: '-500%',
+          change1h: '100%'
+        }
+      }
+    };
+
+    // Utility Functions
+    const utils = {
+      createSparklineSVG(prices, width = 100, height = 40, color = "#2ecc71") {
+        if (!prices || prices.length < 2) {
+          return `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}"></svg>`;
+        }
+
+        const minPrice = Math.min(...prices);
+        const maxPrice = Math.max(...prices);
+        const range = maxPrice - minPrice || 1;
+        const step = width / (prices.length - 1);
+        
+        let pathData = prices.map((p, i) => {
+          const x = i * step;
+          const y = height - ((p - minPrice) / range) * height;
+          return `${i === 0 ? 'M' : 'L'} ${x},${y}`;
+        }).join(' ');
+
+        return `
+          <svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" 
+               xmlns="http://www.w3.org/2000/svg">
+            <path d="${pathData}" fill="none" stroke="${color}" stroke-width="2" 
+                  stroke-linecap="round" stroke-linejoin="round" />
+          </svg>`;
+      },
+
+      formatPrice(price) {
+        if (typeof price !== 'number') return price;
+        return price < 1 ? price.toFixed(8).replace(/\.?0+$/, '') : price.toLocaleString();
+      },
+
+      animatePriceChange(element, isPositive) {
+        element.classList.add(isPositive ? 'price-up' : 'price-down');
+        setTimeout(() => {
+          element.classList.remove('price-up', 'price-down');
+        }, 500);
+      },
+
+      updateConnectionStatus(connected) {
+        const statusEl = elements.connectionStatus;
+        const indicator = statusEl.querySelector('.status-indicator');
+        
+        if (connected) {
+          statusEl.className = 'connection-status connected';
+          indicator.className = 'status-indicator connected';
+          statusEl.querySelector('span:last-child').textContent = 'Live Updates';
+        } else {
+          statusEl.className = 'connection-status disconnected';
+          indicator.className = 'status-indicator disconnected';
+          statusEl.querySelector('span:last-child').textContent = 'Disconnected';
+        }
+      }
+    };
+
+    // WebSocket Functions
+    const ws = {
+      connect() {
+        if (state.socket) {
+          state.socket.close();
+        }
+
+        state.socket = new WebSocket(config.wsEndpoint);
+
+        state.socket.onopen = () => {
+          console.log('WebSocket connected');
+          utils.updateConnectionStatus(true);
+          state.connectionRetries = 0;
+          
+          // Subscribe to updates for tracked coins
+          if (state.trackedCoins.size > 0) {
+            ws.subscribeToCoins([...state.trackedCoins]);
+          }
+        };
+
+        state.socket.onmessage = (event) => {
+          const data = JSON.parse(event.data);
+          this.handleMessage(data);
+        };
+
+        state.socket.onclose = () => {
+          console.log('WebSocket disconnected');
+          utils.updateConnectionStatus(false);
+          
+          // Attempt to reconnect with exponential backoff
+          if (state.connectionRetries < state.maxRetries) {
+            const delay = Math.min(5000, 1000 * Math.pow(2, state.connectionRetries));
+            console.log(`Attempting to reconnect in ${delay}ms...`);
+            setTimeout(() => {
+              state.connectionRetries++;
+              this.connect();
+            }, delay);
+          } else {
+            console.log('Max reconnection attempts reached. Falling back to polling.');
+            this.startPolling();
+          }
+        };
+
+        state.socket.onerror = (error) => {
+          console.error('WebSocket error:', error);
+        };
+      },
+
+      subscribeToCoins(coinIds) {
+        if (!state.socket || state.socket.readyState !== WebSocket.OPEN) return;
+        
+        const message = {
+          type: 'subscribe',
+          channels: ['prices'],
+          coin_ids: coinIds
+        };
+        
+        state.socket.send(JSON.stringify(message));
+      },
+
+      handleMessage(data) {
+        if (data.type === 'prices' && data.prices) {
+          this.updatePrices(data.prices);
+        }
+      },
+
+      updatePrices(prices) {
+        // Update cards
+        state.cardsData.forEach(card => {
+          const priceData = prices[card.id];
+          if (priceData) {
+            card.price = priceData.price;
+            // Update DOM if this card is displayed
+            const cardElement = document.querySelector(`.card[data-coin-id="${card.id}"]`);
+            if (cardElement) {
+              const priceElement = cardElement.querySelector('.price');
+              if (priceElement) {
+                const oldPrice = parseFloat(priceElement.textContent.replace('$', '')) || 0;
+                const newPrice = parseFloat(priceData.price) || 0;
+                
+                if (oldPrice !== newPrice) {
+                  priceElement.textContent = `$${priceData.price}`;
+                  utils.animatePriceChange(priceElement, newPrice > oldPrice);
+                }
+              }
+            }
+          }
+        });
+
+        // Update table rows
+        prices.forEach(priceUpdate => {
+          const row = document.querySelector(`tr[data-coin-id="${priceUpdate.coin_id}"]`);
+          if (row) {
+            const priceCell = row.querySelector('td:nth-child(4)');
+            if (priceCell) {
+              const oldPrice = parseFloat(priceCell.textContent.replace('$', '')) || 0;
+              const newPrice = parseFloat(priceUpdate.price) || 0;
+              
+              if (oldPrice !== newPrice) {
+                priceCell.textContent = `$${utils.formatPrice(newPrice)}`;
+                utils.animatePriceChange(priceCell, newPrice > oldPrice);
+              }
+            }
+          }
+        });
+      },
+
+      startPolling() {
+        // Fallback to polling if WebSocket fails
+        console.log('Starting polling fallback');
+        state.updateInterval = setInterval(
+          () => app.updateData(), 
+          config.updateIntervalMs
+        );
+      }
+    };
+
+    // API Functions
+    const api = {
+      async fetchTrending() {
+        try {
+          const response = await fetch(`${config.apiBaseUrl}/search/trending`);
+          if (!response.ok) throw new Error('Network response was not ok');
+          return await response.json();
+        } catch (error) {
+          console.error('Error fetching trending coins:', error);
+          return null;
+        }
+      },
+
+      async fetchMarketData() {
+        try {
+          const url = `${config.apiBaseUrl}/coins/markets?vs_currency=usd&order=market_cap_desc` +
+                      `&per_page=100&page=1&sparkline=true&price_change_percentage=1h,24h`;
+          const response = await fetch(url);
+          if (!response.ok) throw new Error('Network response was not ok');
+          return await response.json();
+        } catch (error) {
+          console.error('Error fetching market data:', error);
+          return null;
+        }
+      },
+
+      async fetchCoinDetails(coinId) {
+        if (state.coinCache[coinId]) return state.coinCache[coinId];
+        
+        try {
+          const response = await fetch(`${config.apiBaseUrl}/coins/${coinId}`);
+          if (!response.ok) throw new Error('Network response was not ok');
+          const data = await response.json();
+          state.coinCache[coinId] = data;
+          return data;
+        } catch (error) {
+          console.error(`Error fetching details for ${coinId}:`, error);
+          return null;
+        }
+      }
+    };
+
+    // UI Update Functions
+    const ui = {
+      updateCards() {
+        let html = '';
+        
+        state.cardsData.forEach(card => {
+          const isPositive = card.change24h.startsWith('+');
+          
+          html += `
+            <div class="card" data-coin-id="${card.id}">
+              <img src="${card.image}" alt="${card.name}" />
+              <div class="coin-name">${card.name}</div>
+              <div class="price">$${card.price}</div>
+              <div class="change ${isPositive ? 'positive' : 'negative'}">
+                ${card.change24h}
+              </div>
+            </div>`;
+        });
+
+        elements.cardsContainer.innerHTML = html;
+      },
+
+      updateTrending(data) {
+        if (!data?.coins) {
+          elements.trendingContainer.innerHTML = `
+            <div class="trending-item error">
+              Failed to load trending data. Please try again later.
+            </div>`;
+          return;
+        }
+
+        let html = '';
+        
+        // Add real trending coins
+        data.coins.forEach(coin => {
+          const symbol = coin.item.symbol.toLowerCase();
+          const customCoin = config.customCoins[symbol];
+          
+          if (customCoin) {
+            html += `
+              <div class="trending-item" onclick="app.redirectToCoin('${coin.item.id}', '${coin.item.symbol}')">
+                <img src="${customCoin.image}" alt="${coin.item.name}" />
+                ${coin.item.name} (${coin.item.symbol.toUpperCase()}) - 
+                $${customCoin.price} / 
+                <span class="${customCoin.change24h.startsWith('+') ? 'positive' : 'negative'}">
+                  ${customCoin.change24h}
+                </span>
+              </div>`;
+          } else {
+            const change24h = coin.item.data.price_change_percentage_24h?.usd || 0;
+            html += `
+              <div class="trending-item" onclick="app.redirectToCoin('${coin.item.id}', '${coin.item.symbol}')">
+                <img src="${coin.item.thumb}" alt="${coin.item.name}" />
+                ${coin.item.name} (${coin.item.symbol.toUpperCase()}) - 
+                $${utils.formatPrice(coin.item.data.price)} / 
+                <span class="${change24h >= 0 ? 'positive' : 'negative'}">
+                  ${change24h.toFixed(2)}%
+                </span>
+              </div>`;
+          }
+        });
+
+        // Add static BNB item
+        html += `
+          <div class="trending-item" onclick="app.redirectToCoin('binancecoin', 'bnb')">
+            <img src="https://cryptologos.cc/logos/binance-coin-bnb-logo.svg?v=024" alt="BNB" />
+            BNB (BNB) - $320.45 / 
+            <span class="positive">+2.10%</span>
+          </div>`;
+
+        elements.trendingContainer.innerHTML = html;
+      },
+
+      updateTableHeader() {
+        const isMobile = window.innerWidth <= 768;
+        elements.tableHeader.innerHTML = isMobile ? `
+          <tr>
+            <th>#</th>
+            <th>Name</th>
+            <th>Price</th>
+            <th>1h %</th>
+            <th>24h %</th>
+            <th>Chart</th>
+          </tr>
+        ` : `
+          <tr>
+            <th>#</th>
+            <th>Name</th>
+            <th>Market Cap</th>
+            <th>Price</th>
+            <th>1h %</th>
+            <th>24h %</th>
+            <th>Chart</th>
+          </tr>
+        `;
+      },
+
+      updateMarketData(data) {
+        if (!data || !Array.isArray(data)) {
+          elements.tableBody.innerHTML = `
+            <tr>
+              <td colspan="7" class="loading error">
+                Failed to load market data. Please try again later.
+              </td>
+            </tr>`;
+          return;
+        }
+
+        let html = '';
+        const isMobile = window.innerWidth <= 768;
+        const coinIds = [];
+
+        data.forEach((crypto, index) => {
+          const symbol = crypto.symbol.toLowerCase();
+          const customCoin = config.customCoins[symbol];
+          coinIds.push(crypto.id);
+          
+          // Handle custom coins
+          if (customCoin) {
+            if (isMobile) {
+              html += `
+                <tr data-coin-id="${crypto.id}" onclick="app.redirectToCoin('${crypto.id}', '${crypto.symbol}')">
+                  <td><img src="${customCoin.image}" class="crypto-logo" alt="${crypto.name}" /></td>
+                  <td>${crypto.symbol.toUpperCase()}</td>
+                  <td>$${customCoin.price}</td>
+                  <td class="change ${customCoin.change1h.startsWith('+') ? 'positive' : 'negative'}">
+                    ${customCoin.change1h}
+                  </td>
+                  <td class="change ${customCoin.change24h.startsWith('+') ? 'positive' : 'negative'}">
+                    ${customCoin.change24h}
+                  </td>
+                  <td class="sparkline-cell">
+                    ${utils.createSparklineSVG([], 80, 30, customCoin.change24h.startsWith('+') ? '#2ecc71' : '#e74c3c')}
+                  </td>
+                </tr>`;
+            } else {
+              html += `
+                <tr data-coin-id="${crypto.id}" onclick="app.redirectToCoin('${crypto.id}', '${crypto.symbol}')">
+                  <td>${index + 1}</td>
+                  <td>
+                    <img src="${customCoin.image}" class="crypto-logo" alt="${crypto.name}" />
+                    ${crypto.name} (${crypto.symbol.toUpperCase()})
+                  </td>
+                  <td>$${(crypto.market_cap || 0).toLocaleString()}</td>
+                  <td>$${customCoin.price}</td>
+                  <td class="change ${customCoin.change1h.startsWith('+') ? 'positive' : 'negative'}">
+                    ${customCoin.change1h}
+                  </td>
+                  <td class="change ${customCoin.change24h.startsWith('+') ? 'positive' : 'negative'}">
+                    ${customCoin.change24h}
+                  </td>
+                  <td class="sparkline-cell">
+                    ${utils.createSparklineSVG([], 80, 30, customCoin.change24h.startsWith('+') ? '#2ecc71' : '#e74c3c')}
+                  </td>
+                </tr>`;
+            }
+            return;
+          }
+
+          // Handle regular coins
+          const priceChange24h = crypto.price_change_percentage_24h || 0;
+          const priceChange1h = crypto.price_change_percentage_1h_in_currency || 0;
+          const sparklineData = crypto.sparkline_in_7d?.price || [];
+          const lineColor = priceChange24h >= 0 ? '#2ecc71' : '#e74c3c';
+          
+          // Price animation logic
+          const priceElementId = `price-${crypto.id}`;
+          let priceClass = '';
+          
+          if (!state.isFirstLoad && state.previousPrices[crypto.id] !== undefined) {
+            if (crypto.current_price > state.previousPrices[crypto.id]) {
+              priceClass = 'price-up';
+            } else if (crypto.current_price < state.previousPrices[crypto.id]) {
+              priceClass = 'price-down';
+            }
+          }
+          state.previousPrices[crypto.id] = crypto.current_price;
+
+          if (isMobile) {
+            html += `
+              <tr data-coin-id="${crypto.id}" onclick="app.redirectToCoin('${crypto.id}', '${crypto.symbol}')">
+                <td><img src="${crypto.image}" class="crypto-logo" alt="${crypto.name}" /></td>
+                <td>${crypto.symbol.toUpperCase()}</td>
+                <td class="${priceClass}">$${utils.formatPrice(crypto.current_price)}</td>
+                <td class="change ${priceChange1h >= 0 ? 'positive' : 'negative'}">
+                  ${priceChange1h.toFixed(2)}%
+                </td>
+                <td class="change ${priceChange24h >= 0 ? 'positive' : 'negative'}">
+                  ${priceChange24h.toFixed(2)}%
+                </td>
+                <td class="sparkline-cell">
+                  ${utils.createSparklineSVG(sparklineData, 80, 30, lineColor)}
+                </td>
+              </tr>`;
+          } else {
+            html += `
+              <tr data-coin-id="${crypto.id}" onclick="app.redirectToCoin('${crypto.id}', '${crypto.symbol}')">
+                <td>${index + 1}</td>
+                <td>
+                  <img src="${crypto.image}" class="crypto-logo" alt="${crypto.name}" />
+                  ${crypto.name} (${crypto.symbol.toUpperCase()})
+                </td>
+                <td>$${(crypto.market_cap || 0).toLocaleString()}</td>
+                <td class="${priceClass}">$${utils.formatPrice(crypto.current_price)}</td>
+                <td class="change ${priceChange1h >= 0 ? 'positive' : 'negative'}">
+                  ${priceChange1h.toFixed(2)}%
+                </td>
+                <td class="change ${priceChange24h >= 0 ? 'positive' : 'negative'}">
+                  ${priceChange24h.toFixed(2)}%
+                </td>
+                <td class="sparkline-cell">
+                  ${utils.createSparklineSVG(sparklineData, 80, 30, lineColor)}
+                </td>
+              </tr>`;
+          }
+        });
+
+        elements.tableBody.innerHTML = html;
+        state.isFirstLoad = false;
+        
+        // Track these coins for WebSocket updates
+        coinIds.forEach(id => state.trackedCoins.add(id));
+        
+        // If WebSocket is connected, subscribe to these coins
+        if (state.socket && state.socket.readyState === WebSocket.OPEN) {
+          ws.subscribeToCoins(coinIds);
+        }
+      }
+    };
+
+    // App Controller
+    const app = {
+      async init() {
+        // Initialize UI components
+        ui.updateCards();
+        ui.updateTableHeader();
+        window.addEventListener('resize', ui.updateTableHeader);
+        
+        // Connect to WebSocket
+        ws.connect();
+        
+        // Initial data load
+        await this.updateData();
+      },
+
+      async updateData() {
+        try {
+          const [trendingData, marketData] = await Promise.all([
+            api.fetchTrending(),
+            api.fetchMarketData()
+          ]);
+          
+          ui.updateTrending(trendingData);
+          ui.updateMarketData(marketData);
+          
+          // Prefetch details for the top 10 coins
+          if (marketData?.length) {
+            const topCoins = marketData.slice(0, 10);
+            topCoins.forEach(coin => {
+              if (!state.coinCache[coin.id]) {
+                api.fetchCoinDetails(coin.id);
+              }
+            });
+          }
+        } catch (error) {
+          console.error('Error updating data:', error);
+        }
+      },
+
+      redirectToCoin(coinId, coinSymbol) {
+        if (coinSymbol.toUpperCase() === 'ADA') {
+          window.open('https://basescan.org/token/0x906BC5Cd49bB4B097274AE96f0F45cAe56Eae54D', '_blank');
+          return;
+        }
+        if (coinSymbol.toUpperCase() === 'ONDO') {
+          window.open('https://basescan.org/token/0x2B55B329a0157A054b123559f2391b6cB3C2f436', '_blank');
+          return;
+        }
+        
+        if (state.coinCache[coinId]) {
+          this.openOfficialWebsite(coinId, state.coinCache[coinId]);
+        } else {
+          api.fetchCoinDetails(coinId)
+            .then(data => {
+              if (data) this.openOfficialWebsite(coinId, data);
+              else window.open(`https://www.coingecko.com/en/coins/${coinId}`, '_blank');
+            })
+            .catch(() => {
+              window.open(`https://www.coingecko.com/en/coins/${coinId}`, '_blank');
+            });
+        }
+      },
+
+      openOfficialWebsite(coinId, coinData) {
+        const officialWebsite = coinData.links?.homepage?.find(url => url?.trim());
+        window.open(officialWebsite || `https://www.coingecko.com/en/coins/${coinId}`, '_blank');
+      }
+    };
+
+    // Initialize the app
+    document.addEventListener('DOMContentLoaded', () => app.init());
+  </script>
+</body>
+</html>
